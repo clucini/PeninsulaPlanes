@@ -8,43 +8,53 @@
 #
 
 library(shiny)
+library(shinydashboard)
+library(leaflet)
+library(dplyr)
 
-# Define UI for application that draws a histogram
-ui <- fluidPage(
-   
-   # Application title
-   titlePanel("Old Faithful Geyser Data"),
-   
-   # Sidebar with a slider input for number of bins 
-   sidebarLayout(
-      sidebarPanel(
-         sliderInput("bins",
-                     "Number of bins:",
-                     min = 1,
-                     max = 50,
-                     value = 30)
-      ),
-      
-      # Show a plot of the generated distribution
-      mainPanel(
-         plotOutput("distPlot")
-      )
-   )
+
+raw_data <- read.csv("log.csv")
+
+PlaneData <- filter(raw_data, Transmission.Type == 3)
+rename(PlaneData,
+       X.6 = Latitude,
+       X.7 = Longitude
 )
+PlaneData <- arrange(PlaneData, HexIdnet)
 
+# UI
+ui <- dashboardPage(
+  dashboardHeader(
+
+  ),
+  dashboardSidebar(
+    
+   
+  ),
+  dashboardBody(
+    tags$style(type = "text/css", "#map {height: calc(100vh - 80px) !important;}"),
+    leafletOutput("map",height = "50"),
+    checkboxGroupInput("planecheckboxes", "Planes", unique(PlaneData$HexIdnet))
+  )
+)
 # Define server logic required to draw a histogram
 server <- function(input, output) {
-   
-   output$distPlot <- renderPlot({
-      # generate bins based on input$bins from ui.R
-      x    <- faithful[, 2] 
-      bins <- seq(min(x), max(x), length.out = input$bins + 1)
-      
-      # draw the histogram with the specified number of bins
-      hist(x, breaks = bins, col = 'darkgray', border = 'white')
-   })
+
+  
+  output$map <- renderLeaflet({
+    m <-leaflet(PlaneData) %>%
+      addTiles()
+  })
+  observe({
+    
+  })
 }
 
+
+
 # Run the application 
+options(shiny.port = 20000)
+options(shiny.host = "192.168.72.112")
 shinyApp(ui = ui, server = server)
+
 
