@@ -11,25 +11,42 @@ library(shiny)
 library(shinydashboard)
 library(leaflet)
 library(dplyr)
+library(RODBC)
 
 
-raw_data <- read.csv("log.csv")
+if(FALSE)
+{
+  dbconnection <- odbcDriverConnect("Driver=SQL Server Native Client 11.0;Server=192.168.11.34;Database=fdata;Uid=fdata;Pwd=eagleone")
+  initdata <<- sqlQuery(dbconnection,paste("select * from ds1;"))
+  odbcCloseAll()
+}
 
-PlaneData <- filter(raw_data, Transmission.Type == 3)
-PlaneData <- arrange(PlaneData, HexIdnet)
+
+if(TRUE)
+{
+  raw_data <- read.csv("log.csv")
+  
+  initdata <- initdata %>% rename_all(funs(colnames(raw_data)))
+  
+  com_data <- rbind(raw_data, initdata, na.rm=FALSE)
+  
+  PlaneData <<- filter(com_data, Transmission.Type == 3)
+  PlaneData <<- arrange(PlaneData, HexIdnet)
+}
 
 m <-leaflet(PlaneData) %>%
   addTiles() 
 
-for(i in unique(PlaneData$HexIdnet))
+for(i in levels(PlaneData$HexIdnet))
   {
     m <- m %>% addPolylines(
-                 lng = PlaneData[PlaneData$HexIdnet == i,]$Longitude,
-                 lat = PlaneData[PlaneData$HexIdnet == i,]$Latitude
+                  PlaneData[PlaneData$HexIdnet == i,],
+                  lng = ~Longitude,
+                  lat = ~Latitude,
+                  #popup = ~HexIdnet
+                  #col = ~c()
                  )
   }
-
-
 
 # UI
 ui <- dashboardPage(
@@ -45,18 +62,16 @@ ui <- dashboardPage(
   dashboardBody(
     tabItems(
       tabItem(tabName = "map",
-        fluidRow(
-          leafletOutput("map")
-        ),
-        fluidRow(
-          checkboxGroupInput("planecheckboxes", "Planes", unique(PlaneData$HexIdnet))
-        )
+          leafletOutput("map", height = "75vh"),
+          checkboxGroupInput("planecheckboxes", "Planes", levels(PlaneData$HexIdnet), selected = levels(PlaneData$HexIdnet))
       ),
       tabItem(tabName = "options"
               )
     )
   )
 )
+
+
 # Define server logic required to draw a histogram
 server <- function(input, output) {
 
@@ -64,8 +79,18 @@ server <- function(input, output) {
   output$map <- renderLeaflet({
     m
   })
-  observe({
-    
+  
+  observeEvent(input$planecheckboxes, {
+    leafletProxy("map") %>% 
+      clearShapes()
+      
+    for(i in input$planecheckboxes)
+    {
+      leafletProxy("map") %>% addPolylines(
+        lng = PlaneData[PlaneData$HexIdnet == i,]$Longitude,
+        lat = PlaneData[PlaneData$HexIdnet == i,]$Latitude
+      )
+    }
   })
 }
 
