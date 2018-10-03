@@ -16,25 +16,45 @@ library(dplyr)
 raw_data <- read.csv("log.csv")
 
 PlaneData <- filter(raw_data, Transmission.Type == 3)
-rename(PlaneData,
-       X.6 = Latitude,
-       X.7 = Longitude
-)
 PlaneData <- arrange(PlaneData, HexIdnet)
+
+m <-leaflet(PlaneData) %>%
+  addTiles() 
+
+for(i in unique(PlaneData$HexIdnet))
+  {
+    m <- m %>% addPolylines(
+                 lng = PlaneData[PlaneData$HexIdnet == i,]$Longitude,
+                 lat = PlaneData[PlaneData$HexIdnet == i,]$Latitude
+                 )
+  }
+
+
 
 # UI
 ui <- dashboardPage(
   dashboardHeader(
-
+    title = "Peninsula Planes"
   ),
   dashboardSidebar(
-    
-   
+    sidebarMenu(
+      menuItem("Map", tabName = "map", icon = icon("map-marker")),
+      menuItem("Options", tabname = "options", icon = icon("filter"))
+    )
   ),
   dashboardBody(
-    tags$style(type = "text/css", "#map {height: calc(100vh - 80px) !important;}"),
-    leafletOutput("map",height = "50"),
-    checkboxGroupInput("planecheckboxes", "Planes", unique(PlaneData$HexIdnet))
+    tabItems(
+      tabItem(tabName = "map",
+        fluidRow(
+          leafletOutput("map")
+        ),
+        fluidRow(
+          checkboxGroupInput("planecheckboxes", "Planes", unique(PlaneData$HexIdnet))
+        )
+      ),
+      tabItem(tabName = "options"
+              )
+    )
   )
 )
 # Define server logic required to draw a histogram
@@ -42,8 +62,7 @@ server <- function(input, output) {
 
   
   output$map <- renderLeaflet({
-    m <-leaflet(PlaneData) %>%
-      addTiles()
+    m
   })
   observe({
     

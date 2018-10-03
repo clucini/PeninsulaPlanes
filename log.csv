@@ -1,4 +1,4 @@
-Message Type,Transmission Type,Session ID,AircraftID,HexIdnet,FlightID,Date MSG Generated,Time MSG Generated,,,,,,,Latitude,Longitude,,,,,,,,,,,,
+Message Type,Transmission Type,Session ID,AircraftID,HexIdnet,FlightID,Date MSG Generated,Time MSG Generated,Time MSG Received,Time MSG Received,a,b,c,d,Latitude,Longitude,e,f,g,h,i,j,,,,,,
 MSG,4,1,1,7C6D9D,1,10/1/2018,33:53.2,10/1/2018,33:53.2,,,436,19,,,1920,,,,,0,,,,,,
 MSG,4,1,1,7C6C2B,1,10/1/2018,33:53.3,10/1/2018,33:53.3,,,377,18,,,2688,,,,,0,,,,,,
 MSG,6,1,1,7C6C2B,1,10/1/2018,33:53.3,10/1/2018,33:53.3,,,,,,,,1416,0,0,0,,,,,,,
